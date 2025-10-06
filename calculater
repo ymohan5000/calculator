@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Mobile Calculator</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/12.0.0/math.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #000;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+      touch-action: manipulation;
+    }
+
+    .calculator {
+      width: 100%;
+      max-width: 100vw;
+      height: 100vh;
+      max-height: 100vh;
+      background: #000;
+      display: flex;
+      flex-direction: column;
+      padding: 10px;
+    }
+
+    .display {
+      flex: 0 0 120px;
+      font-size: 2.5em;
+      text-align: right;
+      padding: 20px 10px 10px;
+      background: #000;
+      border-bottom: 1px solid #333;
+      color: #fff;
+      outline: none;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 10px 10px;
+      flex: 0 0 auto;
+    }
+
+    .toggle-btn, .clear-btn {
+      width: 60px;
+      height: 40px;
+      border: none;
+      border-radius: 20px;
+      background: #222;
+      color: #fff;
+      font-size: 0.9em;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    .toggle-btn:active, .clear-btn:active {
+      background: #444;
+      transform: scale(0.95);
+    }
+
+    .buttons {
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(5, 1fr);
+      gap: 8px;
+      padding: 8px;
+    }
+
+    button {
+      min-height: 44px;
+      font-size: 1.5em;
+      font-weight: 400;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(145deg, #222, #111);
+      color: #fff;
+      cursor: pointer;
+      transition: all 0.1s;
+      user-select: none;
+      box-shadow: 2px 2px 4px #000, -2px -2px 4px #222;
+    }
+
+    button:active {
+      box-shadow: inset 2px 2px 4px #000, inset -2px -2px 4px #222;
+      transform: scale(0.97);
+    }
+
+    .operator {
+      background: linear-gradient(145deg, #ffb347, #ff9500);
+      color: #000;
+    }
+
+    .function {
+      background: linear-gradient(145deg, #999, #777);
+      color: #000;
+    }
+
+    .equals {
+      background: linear-gradient(145deg, #ffb347, #ff9500);
+      color: #000;
+      grid-row: span 2;
+    }
+
+    .zero {
+      grid-column: span 3;
+    }
+
+    @media (orientation: landscape) and (max-height: 500px) {
+      .display {
+        flex: 0 0 80px;
+        font-size: 1.8em;
+        padding: 10px;
+      }
+      .buttons {
+        grid-template-rows: repeat(4, 1fr);
+      }
+      button {
+        min-height: 50px;
+      }
+    }
+
+    ::-webkit-scrollbar { display: none; }
+  </style>
+</head>
+<body>
+  <div class="calculator">
+    <input type="text" id="display" class="display" value="0" readonly>
+    <div class="top-bar">
+      <button id="degToggle" class="toggle-btn">RAD</button>
+      <button class="clear-btn" onclick="clearAll()">C</button>
+    </div>
+    <div class="buttons">
+      <button class="function" onclick="appendToDisplay('sin(')">sin</button>
+      <button class="function" onclick="appendToDisplay('cos(')">cos</button>
+      <button class="function" onclick="appendToDisplay('tan(')">tan</button>
+      <button class="operator" onclick="appendToDisplay('/')">÷</button>
+
+      <button class="function" onclick="appendToDisplay('√(')">√</button>
+      <button class="function" onclick="appendToDisplay('log(')">log</button>
+      <button class="function" onclick="appendToDisplay('exp(')">exp</button>
+      <button class="operator" onclick="appendToDisplay('*')">×</button>
+
+      <button class="number" onclick="appendToDisplay('7')">7</button>
+      <button class="number" onclick="appendToDisplay('8')">8</button>
+      <button class="number" onclick="appendToDisplay('9')">9</button>
+      <button class="operator" onclick="appendToDisplay('-')">-</button>
+
+      <button class="number" onclick="appendToDisplay('4')">4</button>
+      <button class="number" onclick="appendToDisplay('5')">5</button>
+      <button class="number" onclick="appendToDisplay('6')">6</button>
+      <button class="operator" onclick="appendToDisplay('+')">+</button>
+
+      <button class="function" onclick="appendToDisplay('(')">(</button>
+      <button class="number" onclick="appendToDisplay('1')">1</button>
+      <button class="number" onclick="appendToDisplay('2')">2</button>
+      <button class="number" onclick="appendToDisplay('3')">3</button>
+
+      <button class="function" onclick="appendToDisplay(')')">)</button>
+      <button class="zero number" onclick="appendToDisplay('0')">0</button>
+      <button class="number" onclick="appendToDisplay('.')">.</button>
+      <button class="function" onclick="appendToDisplay('π')">π</button>
+
+      <button id="backBtn" class="function" onclick="backspace()">⌫</button>
+      <button class="function" onclick="appendToDisplay('^')">^</button>
+      <button class="function" onclick="appendToDisplay('ln(')">ln</button>
+      <button class="equals" onclick="calculate()">=</button>
+    </div>
+  </div>
+
+  <script>
+    const display = document.getElementById('display');
+    const backBtn = document.getElementById('backBtn');
+    let isDegrees = false;
+
+    function appendToDisplay(value) {
+      if (display.value === '0' || display.value === 'Error') display.value = '';
+      display.value += value;
+      display.scrollLeft = display.scrollWidth;
+    }
+
+    function clearAll() {
+      display.value = '0';
+    }
+
+    function backspace() {
+      display.value = display.value.slice(0, -1) || '0';
+    }
+
+    // Long-press backspace to clear all
+    backBtn.addEventListener('mousedown', () => {
+      clearTimeout(backBtn._pressTimer);
+      backBtn._pressTimer = setTimeout(clearAll, 700);
+    });
+    backBtn.addEventListener('mouseup', () => clearTimeout(backBtn._pressTimer));
+
+    // DEG/RAD toggle
+    document.getElementById('degToggle').addEventListener('click', function() {
+      isDegrees = !isDegrees;
+      this.textContent = isDegrees ? 'DEG' : 'RAD';
+    });
+
+    function calculate() {
+      let expression = display.value
+        .replace(/÷/g, '/')
+        .replace(/×/g, '*')
+        .replace(/\^/g, '**')
+        .replace(/√/g, 'sqrt(')
+        .replace(/π/g, 'pi');
+
+      if (!expression || expression === '0') return;
+
+      try {
+        if (isDegrees) {
+          expression = expression
+            .replace(/\b(sin|cos|tan)\(/g, (m, f) => `${f}(degToRad(`)
+            .replace(/\b(asin|acos|atan)\(/g, (m, f) => `radToDeg(${f}(`);
+
+          math.import({
+            degToRad: (x) => x * Math.PI / 180,
+            radToDeg: (x) => x * 180 / Math.PI
+          }, { override: true });
+        }
+
+        let result = math.evaluate(expression);
+        display.value = (typeof result === 'number' ? result.toFixed(8).replace(/\.?0+$/, '') : result.toString()).slice(0, 15);
+
+        if (navigator.vibrate) navigator.vibrate(50);
+      } catch (error) {
+        display.value = 'Error';
+        if (navigator.vibrate) navigator.vibrate(100);
+        setTimeout(() => { display.value = '0'; }, 1000);
+      }
+    }
+
+    // Keyboard support
+    document.addEventListener('keydown', (e) => {
+      e.preventDefault();
+      if (e.key >= '0' && e.key <= '9' || e.key === '.') appendToDisplay(e.key);
+      else if (['+', '-', '*', '/', '(', ')', '^'].includes(e.key)) appendToDisplay(e.key.replace('*', '×').replace('/', '÷'));
+      else if (e.key === 'Enter' || e.key === '=') calculate();
+      else if (e.key === 'Escape' || e.key.toLowerCase() === 'c') clearAll();
+      else if (e.key === 'Backspace') backspace();
+    });
+
+    // Prevent double-tap zoom
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', (e) => {
+      const now = Date.now();
+      if (now - lastTouchEnd <= 300) e.preventDefault();
+      lastTouchEnd = now;
+    }, false);
+  </script>
+</body>
+</html>
